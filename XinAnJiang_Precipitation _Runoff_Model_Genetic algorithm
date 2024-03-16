@@ -1,0 +1,1103 @@
+// This a script for a software interface that calibrates the XinAnJiang precipitation Runoff Model using the genetic algorithm. the user only needs to input the precipitation data and observed flow data, 
+// the software will calibrate all the parameters of the model
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.IO;
+
+namespace GEnetics
+{
+    
+    public partial class Form1 : Form
+    {
+        DataTable dt = new DataTable();
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        { // double d = Convert.ToDouble(dataGridView1.Rows[0].Cells[0]);
+            double[,] Ew = new double[1, 1461];
+            double[,] P = new double[1, 1461];     
+            double[,] Q1 = new double[1, 1461];
+            ////string[] DATE = new string[1461];///////////////////////////
+            for (int n = 0; n < Ew.Length; n++)
+            {
+                //DATE[n] = Convert.ToString(dataGridView1.Rows[n].Cells[0].ToString());
+                Q1[0, n] = Convert.ToDouble(dataGridView1.Rows[n].Cells[1].Value);
+                Ew[0, n] = Convert.ToDouble(dataGridView1.Rows[n].Cells[2].Value);
+                P[0, n] = Convert.ToDouble(dataGridView1.Rows[n].Cells[3].Value);
+            }
+
+            //  遗传算法
+            Random select = new Random();
+            Random select1 = new Random();
+            Random rad3 = new Random();
+            int maxgeneration = Convert.ToInt32(textBox2.Text);
+            int Y = 11;//每一代的个体数
+            double[] DC = new double[Y];
+            XAJ1 x = new XAJ1();
+            XAJ2 x1 = new XAJ2();
+            //初始化种群
+
+            double[] top = new double[] { 70, 10, 55, 0.8, 0.2, 3.5, 1.5, 50, 0.1, 0.1, 0.9, 0.998 };//WUM WLM WDM KC C b EX SM KSS KG KKSS KKG
+            double[] bot = new double[] { 60, 30, 44, 0.5, 0.09, 2.5, 0.4, 20, 0.01, 0.01, 0.5, 0.98 };
+            double[] jd = new double[] { 2, 2, 2, 2, 2, 2, 2, 1, 3, 3, 3, 3 };
+            int[] weishu = new int[] { 11, 12, 13, 5, 4, 7, 6, 9, 7, 7, 9, 5 };
+            string[,] father = new string[Y, 1];
+            string[,] son = new string[Y, 1];
+            double[] DC1 = new double[Y];
+
+            //初始化生成2进制
+            string[] WUM1 = new string[Y];
+            string[] WLM1 = new string[Y];
+            string[] WDM1 = new string[Y];
+            string[] KC1 = new string[Y];
+            string[] C1 = new string[Y];
+            string[] b1 = new string[Y];
+            string[] EX1 = new string[Y];
+            string[] SM1 = new string[Y];
+            string[] KSS1 = new string[Y];
+            string[] KG1 = new string[Y];
+            string[] KKSS1 = new string[Y];
+            string[] KKG1 = new string[Y];
+            int[] WUM2 = new int[Y];
+            int[] WLM2 = new int[Y];
+            int[] WDM2 = new int[Y];
+            int[] KC2 = new int[Y];
+            int[] C2 = new int[Y];
+            int[] b2 = new int[Y];
+            int[] EX2 = new int[Y];
+            int[] SM2 = new int[Y];
+            int[] KSS2 = new int[Y];
+            int[] KG2 = new int[Y];
+            int[] KKSS2 = new int[Y];
+            int[] KKG2 = new int[Y];
+            double[] WUM3 = new double[Y];
+            double[] WLM3 = new double[Y];
+            double[] WDM3 = new double[Y];
+            double[] KC3 = new double[Y];
+            double[] C3 = new double[Y];
+            double[] b3 = new double[Y];
+            double[] EX3 = new double[Y];
+            double[] SM3 = new double[Y];
+            double[] KSS3 = new double[Y];
+            double[] KG3 = new double[Y];
+            double[] KKSS3 = new double[Y];
+            double[] KKG3 = new double[Y];
+            double[] BC = new double[Y];
+            for (int d = 0; d < Y; d++)
+            {
+                string a = "";
+                for (int j = 0; j < 95; j++)
+                {
+                    a += rad3.Next(0, 2);
+                }
+                father[d, 0] = a;
+            }
+            //将数据二进制的代码转为十进制
+            double[] DC2 = new double[maxgeneration];
+            for (int h = 0; h < maxgeneration; h++)
+            {
+                for (int i = 0; i < Y; i++)
+                {
+                    WUM1[i] = father[i, 0].Substring(0, weishu[0]);
+                    WLM1[i] = father[i, 0].Substring(11, weishu[1]);
+                    WDM1[i] = father[i, 0].Substring(23, weishu[2]);
+                    KC1[i] = father[i, 0].Substring(36, weishu[3]);
+                    C1[i] = father[i, 0].Substring(41, weishu[4]);
+                    b1[i] = father[i, 0].Substring(45, weishu[5]);
+                    EX1[i] = father[i, 0].Substring(52, weishu[6]);
+                    SM1[i] = father[i, 0].Substring(58, weishu[7]);
+                    KSS1[i] = father[i, 0].Substring(67, weishu[8]);
+                    KG1[i] = father[i, 0].Substring(74, weishu[9]);
+                    KKSS1[i] = father[i, 0].Substring(81, weishu[10]);
+                    KKG1[i] = father[i, 0].Substring(90, weishu[11]);
+                    WUM2[i] = Convert.ToInt32(WUM1[i], 2);
+                    WLM2[i] = Convert.ToInt32(WLM1[i], 2);
+                    WDM2[i] = Convert.ToInt32(WDM1[i], 2);
+                    KC2[i] = Convert.ToInt32(KC1[i], 2);
+                    C2[i] = Convert.ToInt32(C1[i], 2);
+                    b2[i] = Convert.ToInt32(b1[i], 2);
+                    EX2[i] = Convert.ToInt32(EX1[i], 2);
+                    SM2[i] = Convert.ToInt32(SM1[i], 2);
+                    KSS2[i] = Convert.ToInt32(KSS1[i], 2);
+                    KG2[i] = Convert.ToInt32(KG1[i], 2);
+                    KKSS2[i] = Convert.ToInt32(KKSS1[i], 2);
+                    KKG2[i] = Convert.ToInt32(KKG1[i], 2);//
+                    WUM3[i] = bot[0] + WUM2[i] * (top[0] - bot[0]) / (Math.Pow(2, weishu[0]) - 1);
+                    WLM3[i] = bot[1] + WLM2[i] * (top[1] - bot[1]) / (Math.Pow(2, weishu[1]) - 1);
+                    WDM3[i] = bot[2] + WDM2[i] * (top[2] - bot[2]) / (Math.Pow(2, weishu[2]) - 1);
+                    KC3[i] = bot[3] + KC2[i] * (top[3] - bot[3]) / (Math.Pow(2, weishu[3]) - 1);
+                    C3[i] = bot[4] + C2[i] * (top[4] - bot[4]) / (Math.Pow(2, weishu[4]) - 1);
+                    b3[i] = bot[5] + b2[i] * (top[5] - bot[5]) / (Math.Pow(2, weishu[5]) - 1);
+                    EX3[i] = bot[6] + EX2[i] * (top[6] - bot[6]) / (Math.Pow(2, weishu[6]) - 1);
+                    SM3[i] = bot[7] + SM2[i] * (top[7] - bot[7]) / (Math.Pow(2, weishu[7]) - 1);
+                    KSS3[i] = bot[8] + KSS2[i] * (top[8] - bot[8]) / (Math.Pow(2, weishu[8]) - 1);
+                    KG3[i] = bot[9] + KG2[i] * (top[9] - bot[9]) / (Math.Pow(2, weishu[9]) - 1);
+                    KKSS3[i] = bot[10] + KKSS2[i] * (top[10] - bot[10]) / (Math.Pow(2, weishu[10]) - 1);
+                    KKG3[i] = bot[11] + KKG2[i] * (top[11] - bot[11]) / (Math.Pow(2, weishu[11]) - 1);
+                }
+                //然后变成10进制，计算适应度
+                double temp = 0; double c1;
+                string[] fat = new string[1];
+                for (int i = 0; i < Y; i++)
+                {
+                    DC1[i] = x.XAJ(WUM3[i], WLM3[i], WDM3[i], KC3[i], C3[i], b3[i], EX3[i], SM3[i], KSS3[i], KG3[i], KKSS3[i], KKG3[i], Ew, Q1, P);//调用新安江//DC[i];//对所有的适应度累加
+                }
+
+                for (int i = 1; i < Y; i++)
+                {
+                    if (DC1[0] < DC1[i])
+                    {
+                        c1 = DC1[0];
+                        DC1[0] = DC1[i];
+                        DC1[i] = c1;
+                        fat[0] = father[0, 0];
+                        father[0, 0] = father[i, 0];
+                        father[i, 0] = fat[0];
+                    }
+
+                }
+
+                WUM1[0] = father[0, 0].Substring(0, weishu[0]);
+                WLM1[0] = father[0, 0].Substring(11, weishu[1]);
+                WDM1[0] = father[0, 0].Substring(23, weishu[2]);
+                KC1[0] = father[0, 0].Substring(36, weishu[3]);
+                C1[0] = father[0, 0].Substring(41, weishu[4]);
+                b1[0] = father[0, 0].Substring(45, weishu[5]);
+                EX1[0] = father[0, 0].Substring(52, weishu[6]);
+                SM1[0] = father[0, 0].Substring(58, weishu[7]);
+                KSS1[0] = father[0, 0].Substring(67, weishu[8]);
+                KG1[0] = father[0, 0].Substring(74, weishu[9]);
+                KKSS1[0] = father[0, 0].Substring(81, weishu[10]);
+                KKG1[0] = father[0, 0].Substring(90, weishu[11]);
+                WUM2[0] = Convert.ToInt32(WUM1[0], 2);
+                WLM2[0] = Convert.ToInt32(WLM1[0], 2);
+                WDM2[0] = Convert.ToInt32(WDM1[0], 2);
+                KC2[0] = Convert.ToInt32(KC1[0], 2);
+                C2[0] = Convert.ToInt32(C1[0], 2);
+                b2[0] = Convert.ToInt32(b1[0], 2);
+                EX2[0] = Convert.ToInt32(EX1[0], 2);
+                SM2[0] = Convert.ToInt32(SM1[0], 2);
+                KSS2[0] = Convert.ToInt32(KSS1[0], 2);
+                KG2[0] = Convert.ToInt32(KG1[0], 2);
+                KKSS2[0] = Convert.ToInt32(KKSS1[0], 2);
+                KKG2[0] = Convert.ToInt32(KKG1[0], 2);//
+                WUM3[0] = bot[0] + WUM2[0] * (top[0] - bot[0]) / (Math.Pow(2, weishu[0]) - 1);
+                WLM3[0] = bot[1] + WLM2[0] * (top[1] - bot[1]) / (Math.Pow(2, weishu[1]) - 1);
+                WDM3[0] = bot[2] + WDM2[0] * (top[2] - bot[2]) / (Math.Pow(2, weishu[2]) - 1);
+                KC3[0] = bot[3] + KC2[0] * (top[3] - bot[3]) / (Math.Pow(2, weishu[3]) - 1);
+                C3[0] = bot[4] + C2[0] * (top[4] - bot[4]) / (Math.Pow(2, weishu[4]) - 1);
+                b3[0] = bot[5] + b2[0] * (top[5] - bot[5]) / (Math.Pow(2, weishu[5]) - 1);
+                EX3[0] = bot[6] + EX2[0] * (top[6] - bot[6]) / (Math.Pow(2, weishu[6]) - 1);
+                SM3[0] = bot[7] + SM2[0] * (top[7] - bot[7]) / (Math.Pow(2, weishu[7]) - 1);
+                KSS3[0] = bot[8] + KSS2[0] * (top[8] - bot[8]) / (Math.Pow(2, weishu[8]) - 1);
+                KG3[0] = bot[9] + KG2[0] * (top[9] - bot[9]) / (Math.Pow(2, weishu[9]) - 1);
+                KKSS3[0] = bot[10] + KKSS2[0] * (top[10] - bot[10]) / (Math.Pow(2, weishu[10]) - 1);
+                KKG3[0] = bot[11] + KKG2[0] * (top[11] - bot[11]) / (Math.Pow(2, weishu[11]) - 1);
+
+                DC2[h] = DC1[0];
+
+                for (int i = 0; i < Y; i++)
+                {
+                    temp = temp + DC1[i];
+                }
+                //赌轮盘计算
+                double[] du = new double[Y];//选择概率
+                double[] du1 = new double[Y];//累计概率
+                for (int i = 0; i < Y; i++)
+                {
+                    du[i] = DC1[i] / temp;
+                }
+                for (int i = 0; i < Y; i++)//累计概率
+                {
+                    if (i == 0)
+                    { du1[i] = du[i]; }
+
+                    else
+                    { du1[i] = du1[i - 1] + du[i]; }
+                }
+                for (int i = 0; i < Y; i++)//select 
+                {
+
+                    if (i == 0)
+                    {
+                        son[0, 0] = father[0, 0];
+                    }
+                    else
+                    {
+                        double t2 = select1.NextDouble();//(0,1)random
+                        for (int j = 1; j < Y; j++)
+                        {
+                            if (t2 < du1[0])
+                            {
+                                son[i, 0] = father[0, 0];
+                                break;
+                            }
+                            if (du1[j - 1] < t2 && du1[j] > t2)
+                            {
+                                son[i, 0] = father[i, 0];
+                                break;
+                            }
+
+                        }
+                    }
+                }/////选择结束
+
+                //重新生成的子代
+                for (int i = 0; i < Y; i++)
+                {
+                    father[i, 0] = son[i, 0];
+                }
+                //交叉
+                string[] cros1 = new string[1];
+                double jiao = 0.7;//交叉概率；
+                for (int i = 1; i < Y; i = i + 2)
+                {
+                    double co = select1.NextDouble();
+                    if (co < jiao)
+                    {
+                        int t2 = rad3.Next(3, 95);
+                        cros1[0] = father[i, 0];
+                        father[i, 0] = father[i, 0].Substring(0, t2) + father[i + 1, 0].Substring(t2, 95 - t2);
+                        father[i + 1, 0] = father[i + 1, 0].Substring(0, t2) + cros1[0].Substring(t2, 95 - t2);
+                    }
+                }///////交叉结束
+                //变异
+                double r = 0.02;//变异概率;
+                for (int i = 0; i < Y; i++)
+                {
+                    if (i == 0)
+                    {
+                        double t = rad3.NextDouble();
+                        if (t < r)
+                        {
+                            int t1 = rad3.Next(2, 95);
+                            string[] mut1 = new string[1]; ;
+                            string[] mut2 = new string[1];
+                            string[] mut3 = new string[1];
+                            mut1[0] = father[i, 0].Substring(0, t1 - 1);
+                            mut2[0] = father[i, 0].Substring(t1 - 1, 1);
+                            mut3[0] = father[i, 0].Substring(t1, 95 - t1);
+                            if (mut2[0] == "1")
+                            {
+                                mut2[0] = "0";
+                                father[i, 0] = mut1[0] + mut2[0] + mut3[0];
+                            }
+                            else
+                            {
+                                mut2[0] = "1";
+                                father[i, 0] = mut1[0] + mut2[0] + mut3[0];
+                            }
+                        }
+                        double cc;
+                        WUM1[i] = father[i, 0].Substring(0, weishu[0]);
+                        WLM1[i] = father[i, 0].Substring(11, weishu[1]);
+                        WDM1[i] = father[i, 0].Substring(23, weishu[2]);
+                        KC1[i] = father[i, 0].Substring(36, weishu[3]);
+                        C1[i] = father[i, 0].Substring(41, weishu[4]);
+                        b1[i] = father[i, 0].Substring(45, weishu[5]);
+                        EX1[i] = father[i, 0].Substring(52, weishu[6]);
+                        SM1[i] = father[i, 0].Substring(58, weishu[7]);
+                        KSS1[i] = father[i, 0].Substring(67, weishu[8]);
+                        KG1[i] = father[i, 0].Substring(74, weishu[9]);
+                        KKSS1[i] = father[i, 0].Substring(81, weishu[10]);
+                        KKG1[i] = father[i, 0].Substring(90, weishu[11]);
+                        WUM2[i] = Convert.ToInt32(WUM1[i], 2);
+                        WLM2[i] = Convert.ToInt32(WLM1[i], 2);
+                        WDM2[i] = Convert.ToInt32(WDM1[i], 2);
+                        KC2[i] = Convert.ToInt32(KC1[i], 2);
+                        C2[i] = Convert.ToInt32(C1[i], 2);
+                        b2[i] = Convert.ToInt32(b1[i], 2);
+                        EX2[i] = Convert.ToInt32(EX1[i], 2);
+                        SM2[i] = Convert.ToInt32(SM1[i], 2);
+                        KSS2[i] = Convert.ToInt32(KSS1[i], 2);
+                        KG2[i] = Convert.ToInt32(KG1[i], 2);
+                        KKSS2[i] = Convert.ToInt32(KKSS1[i], 2);
+                        KKG2[i] = Convert.ToInt32(KKG1[i], 2);//
+                        WUM3[i] = bot[0] + WUM2[i] * (top[0] - bot[0]) / (Math.Pow(2, weishu[0]) - 1);
+                        WLM3[i] = bot[1] + WLM2[i] * (top[1] - bot[1]) / (Math.Pow(2, weishu[1]) - 1);
+                        WDM3[i] = bot[2] + WDM2[i] * (top[2] - bot[2]) / (Math.Pow(2, weishu[2]) - 1);
+                        KC3[i] = bot[3] + KC2[i] * (top[3] - bot[3]) / (Math.Pow(2, weishu[3]) - 1);
+                        C3[i] = bot[4] + C2[i] * (top[4] - bot[4]) / (Math.Pow(2, weishu[4]) - 1);
+                        b3[i] = bot[5] + b2[i] * (top[5] - bot[5]) / (Math.Pow(2, weishu[5]) - 1);
+                        EX3[i] = bot[6] + EX2[i] * (top[6] - bot[6]) / (Math.Pow(2, weishu[6]) - 1);
+                        SM3[i] = bot[7] + SM2[i] * (top[7] - bot[7]) / (Math.Pow(2, weishu[7]) - 1);
+                        KSS3[i] = bot[8] + KSS2[i] * (top[8] - bot[8]) / (Math.Pow(2, weishu[8]) - 1);
+                        KG3[i] = bot[9] + KG2[i] * (top[9] - bot[9]) / (Math.Pow(2, weishu[9]) - 1);
+                        KKSS3[i] = bot[10] + KKSS2[i] * (top[10] - bot[10]) / (Math.Pow(2, weishu[10]) - 1);
+                        KKG3[i] = bot[11] + KKG2[i] * (top[11] - bot[11]) / (Math.Pow(2, weishu[11]) - 1);
+                        //然后变成10进制，计算适应度
+                        cc = x.XAJ(WUM3[i], WLM3[i], WDM3[i], KC3[i], C3[i], b3[i], EX3[i], SM3[i], KSS3[i], KG3[i], KKSS3[i], KKG3[i], Ew, Q1, P);
+                        if (DC1[i] < cc)
+                        {
+                            DC1[i] = cc;
+                        }
+                    }
+                    else
+                    {
+                        Random ra = new Random();
+                        double t = ra.NextDouble();
+                        if (t < r)
+                        {
+                            int t1 = rad3.Next(2, 95);
+                            string[] mut1 = new string[1]; ;
+                            string[] mut2 = new string[1];
+                            string[] mut3 = new string[1];
+                            mut1[0] = father[i, 0].Substring(0, t1 - 1);
+                            mut2[0] = father[i, 0].Substring(t1 - 1, 1);
+                            mut3[0] = father[i, 0].Substring(t1, 95 - t1);
+                            if (mut2[0] == "1")
+                            {
+                                mut2[0] = "0";
+                                father[i, 0] = mut1[0] + mut2[0] + mut3[0];
+                            }
+                            else
+                            {
+                                mut2[0] = "1";
+                                father[i, 0] = mut1[0] + mut2[0] + mut3[0];
+                            }
+                        }
+                    }
+                }///////////变异结束
+            }//generation
+
+            //模拟径流图绘制
+           double[,] Qm1=new double [1,1461];
+           double[,] Qm2 = new double[Q1.Length, 1];
+           Qm1 = x1.XAJ3(WUM3[0], WLM3[0], WDM3[0], KC3[0], C3[0], b3[0], EX3[0], SM3[0], KSS3[0], KG3[0], KKSS3[0], KKG3[0], Ew, Q1, P);//最后一次模拟径流输出
+           for (int i = 0; i < Q1.Length; i++)
+           {
+             chart1.Series["实测径流"].Points.AddXY(DATE1[i], Q1[0, i]);//模拟径流图绘制
+               chart1.Series["模拟径流"].Points.AddXY(DATE1[i], Qm1[0, i]);//模拟径流图绘制
+               chart2.Series["降雨量"].Points.AddXY(DATE1[i], P[0, i]);  //降雨图绘制  
+           }
+           for (int i=0; i < Qm2.Length;i++ )  
+           {
+               Qm2[i, 0] = Math.Round(Qm1[0, i], 3);//让Qm1 保留3为小数
+           }
+           chart1.Titles.Add("径流模拟分析");
+           chart1.Titles[0].ForeColor = Color.Black;
+           chart1.Titles[0].Font = new Font("微软雅黑", 10f, FontStyle.Regular);
+           chart1.Titles[0].Alignment = ContentAlignment.TopCenter;
+           //X坐标轴标题
+           chart1.ChartAreas[0].AxisX.Title = "时间";
+           chart1.ChartAreas[0].AxisX.TitleFont = new Font("微软雅黑", 10f, FontStyle.Regular);
+           chart1.ChartAreas[0].AxisX.TitleForeColor = Color.Black;
+           chart1.ChartAreas[0].AxisX.ToolTip = "时间";
+           chart1.BackColor = Color.Transparent;
+           chart1.ChartAreas[0].AxisY.Title = "流量(立方米/秒)";
+           chart1.ChartAreas[0].AxisY.TitleFont = new Font("微软雅黑", 10f, FontStyle.Regular);
+           chart1.ChartAreas[0].AxisY.TitleForeColor = Color.Black;
+           chart1.ChartAreas[0].AxisY.ToolTip = "流量(立方米/秒)";
+        
+           chart2.Titles.Add("降雨过程");
+           chart2.Titles[0].ForeColor = Color.Black;
+           chart2.Titles[0].Font = new Font("微软雅黑", 10f, FontStyle.Regular);
+           chart2.Titles[0].Alignment = ContentAlignment.TopCenter;
+           //X坐标轴标题
+           chart2.ChartAreas[0].AxisX.Title = "时间";
+           chart2.ChartAreas[0].AxisX.TitleFont = new Font("微软雅黑", 10f, FontStyle.Regular);
+           chart2.ChartAreas[0].AxisX.TitleForeColor = Color.Black;
+           chart2.ChartAreas[0].AxisX.ToolTip = "时间";
+           chart2.BackColor = Color.Transparent;
+           chart2.ChartAreas[0].AxisY.Title = "雨量(mm)";
+           chart2.ChartAreas[0].AxisY.TitleFont = new Font("微软雅黑", 10f, FontStyle.Regular);
+           chart2.ChartAreas[0].AxisY.TitleForeColor = Color.Black;
+           chart2.ChartAreas[0].AxisY.ToolTip = "雨量(mm)";
+            //最后适应度
+            string[] str1 = new string[maxgeneration];
+            for (int q = 0; q < maxgeneration; q++)
+            {
+                str1[q] = DC2[q].ToString("f3");
+            }
+            textBox1.Text = str1[maxgeneration - 1];//最后一个DC
+            //画出遗传进化过程图
+            for (int i = 0; i < maxgeneration; i++)
+            {
+                chart3.Series["适应度"].Points.AddXY(i+1,DC2[i]);//遗传度图
+            }
+            chart3.Titles.Add("遗传算法进化过程");
+            chart3.Titles[0].ForeColor = Color.Black;
+            chart3.Titles[0].Font = new Font("微软雅黑", 10f, FontStyle.Regular);
+            chart3.Titles[0].Alignment = ContentAlignment.TopCenter;
+            //X坐标轴标题
+            chart3.ChartAreas[0].AxisX.Title = "代数";
+            chart3.ChartAreas[0].AxisX.TitleFont = new Font("微软雅黑", 10f, FontStyle.Regular);
+            chart3.ChartAreas[0].AxisX.TitleForeColor = Color.Black;
+            chart3.ChartAreas[0].AxisX.ToolTip = "代数";
+            chart3.BackColor = Color.Transparent;
+            chart3.ChartAreas[0].AxisY.Title = "适应度DC";
+            chart3.ChartAreas[0].AxisY.TitleFont = new Font("微软雅黑", 10f, FontStyle.Regular);
+            chart3.ChartAreas[0].AxisY.TitleForeColor = Color.Black;
+            chart3.ChartAreas[0].AxisY.ToolTip = "适应度DC";
+            //把参数放进表格
+            string [,]parameter=new string[12,2];
+           parameter[0, 1] = WUM3[0].ToString("f3"); parameter[0, 0] = ("WUM");
+           parameter[1, 1] = WLM3[0].ToString("f3"); parameter[1, 0] = ("WLM");
+           parameter[2, 1] = WDM3[0].ToString("f3"); parameter[2, 0] = ("WDM");
+           parameter[3, 1] = KC3[0].ToString("f3"); parameter[3, 0] = ("KC");
+           parameter[4, 1] = C3[0].ToString("f3"); parameter[4, 0] = ("C");
+           parameter[5, 1] = b3[0].ToString("f3"); parameter[5, 0] = ("b");
+           parameter[6, 1] = EX3[0].ToString("f3"); parameter[6, 0] = ("EX");
+           parameter[7, 1] = SM3[0].ToString("f3"); parameter[7, 0] = ("SM");
+           parameter[8, 1] = KSS3[0].ToString("f3"); parameter[8, 0] = ("KSS");
+           parameter[9, 1] = KG3[0].ToString("f3"); parameter[9, 0] = ("KG");
+           parameter[10, 1] = KKSS3[0].ToString("f3"); parameter[10, 0] = ("KKSS");
+           parameter[11, 1] = KKG3[0].ToString("f3"); parameter[11, 0] = ("KKG");
+           //DataTable dd = new DataTable();
+           dt = new DataTable();
+           DataRow dr;
+           dt.Columns.Add("时序");
+           dt.Columns.Add("流量（立方米/秒）");//实测径流
+           // dt.Columns.Add("流量（立方米/秒）");//模拟径流
+           dt.Columns.Add("蒸发mm");//蒸发
+           dt.Columns.Add("降雨mm");//降雨；
+           dt.Columns.Add("模拟径流（m3/s）");
+           dt.Columns.Add("率定的参数");
+           dt.Columns.Add("参数值");
+           int count1 = 0;
+           for (int i = 0; i < Q1.Length; i++)
+           {
+               dr = dt.NewRow();
+               dr["时序"] = DATE1[i];
+               dr["流量（立方米/秒）"] = Q11[i];
+               dr["蒸发mm"] = E1[i];
+               dr["降雨mm"] = P1[i];
+               dr["模拟径流（m3/s）"] = Qm2[i, 0];
+               if (count1 < 12)
+               {
+                   dr["率定的参数"] = parameter[count1, 0];
+                   dr["参数值"] = parameter[count1, 1];
+                   count1 = count1+1;
+               }
+               dt.Rows.Add(dr);
+           }
+           dataGridView1.DataSource = dt;
+           //模拟径流导入表格
+           //dataGridView1.DataSource = dt;
+
+           
+           //for (int i = 0; i < parameter.Length; i++)
+           //{
+           //    DataRow dr = dd.NewRow();
+           //    dr["率定的参数"] = parameter[1, 0];
+           //    dr["参数值"] = parameter[1, 1];
+           //    dd.Rows.Add(dr);
+           //}
+           //dataGridView1.DataSource = dd;
+
+}//主程序
+        DataTable dtt = new DataTable();
+        private void 导入数据_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void 导出数据_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        string[] DATE1 = new string[1461];
+        double[] Q11 = new double[1461];
+        double[] P1 = new double[1461];
+        double[] E1 = new double[1461];
+        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+            string[] lines = File.ReadAllLines(@openFileDialog1.FileName);
+            
+            //string[] DATE = new string [lines.Length-1];
+            //double[] Q1 = new double[lines.Length - 1];
+            //double[] P1 = new double[lines.Length - 1];
+            //double[] E1 = new double[lines.Length - 1];
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] s = new string[4];
+                s = lines[i].Split('\t');
+                DATE1[i-1] = s[0];
+                P1[i-1] = Convert.ToDouble(s[1]);
+                Q11[i-1] = Convert.ToDouble(s[2]);
+                E1[i-1] = Convert.ToDouble(s[3]);
+            }
+            DataRow dr;
+            dt.Columns.Add("时序");
+            dt.Columns.Add("流量（立方米/秒）");//实测径流
+            dt.Columns.Add("蒸发mm");//蒸发
+            dt.Columns.Add("降雨mm");//降雨；
+            for (int i = 0; i < Q11.Length;i++ )
+            {
+                dr = dt.NewRow();
+                dr["时序"] = DATE1[i];
+                dr["流量（立方米/秒）"] = Q11[i];
+                dr["蒸发mm"] = E1[i];
+                dr["降雨mm"] = P1[i];
+                dt.Rows.Add(dr);
+            }
+            dataGridView1.DataSource = dt;
+            
+        }
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void 导入数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+        }
+      
+        private void 导出文件ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            saveFileDialog1.Filter = "文本文件(*.txt)|*.txt";
+            saveFileDialog1.ShowDialog();
+        }
+
+        private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+        {
+
+            FileStream f1 = new FileStream(@saveFileDialog1.FileName, FileMode.Create);
+            f1.SetLength(0);
+            StreamWriter sw = new StreamWriter(f1);
+            sw.Write(dataGridView1.Columns[0].HeaderText);// date 
+            sw.Write("\t");
+            sw.Write(dataGridView1.Columns[1].HeaderText);//Q1
+            sw.Write("\t");
+            sw.Write(dataGridView1.Columns[2].HeaderText);//E
+            sw.Write("\t");
+            sw.Write(dataGridView1.Columns[3].HeaderText);//P
+            sw.Write("\t");
+            sw.Write(dataGridView1.Columns[4].HeaderText); //Qm
+            sw.Write("\t");
+            sw.Write(dataGridView1.Columns[5].HeaderText);//parameter
+            sw.Write("\t");
+            sw.Write(dataGridView1.Columns[6].HeaderText);//parameter值
+            sw.WriteLine();
+            for (int i = 0; i < dataGridView1.RowCount; i++)
+            {
+                sw.Write(dataGridView1.Rows[i].Cells[0].Value);
+                sw.Write("\t");
+                sw.Write(dataGridView1.Rows[i].Cells[1].Value);
+                sw.Write("\t");
+                sw.Write(dataGridView1.Rows[i].Cells[2].Value);
+                sw.Write("\t");
+                sw.Write(dataGridView1.Rows[i].Cells[3].Value);
+                sw.Write("\t");
+                sw.Write(dataGridView1.Rows[i].Cells[4].Value);
+                sw.Write("\t");
+                sw.Write(dataGridView1.Rows[i].Cells[5].Value);
+                sw.Write("\t");
+                sw.Write(dataGridView1.Rows[i].Cells[6].Value);
+                sw.WriteLine();
+            } 
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void 导入数据ToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            openFileDialog1.Filter = "文本文件(*.txt)|*.txt";
+            openFileDialog1.ShowDialog();
+        }
+
+        private void chart1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox2_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+        
+       }
+    class XAJ2
+    {
+
+        public double[,] XAJ3(double WUM4, double WLM4, double WDM4, double KC4, double C4, double b4, double EX4, double SM4, double KSS4, double KG4, double KKSS4, double KKG4, double[,] Ew, double[,] Q1, double[,] P)
+        {
+            int N = Ew.Length;
+            double FE = 0.8;// 土壤初始含水量折算系数
+            //double WUM = 63;
+            double WUM = WUM4; //上层土壤含水容量
+            double WLM = WLM4;//= 13;//下层土壤含水容量
+            double WDM = WDM4;//= 50;//深层土壤含水容量
+            double KC = KC4;//0.71;//流域蒸发折算系数
+            double C = C4;//0.17;//蒸发扩散系数
+            double b = b4;//3.0;//蓄水容量曲线的次方
+            double IMP = 0.001;//流域不透水面积占全流域的百分比
+            double AREA = 6448;//流域面积
+            double[,] WU = new double[1, N];//上层含水量
+            double[,] WL = new double[1, N];//下层含水量
+            double[,] WD = new double[1, N];//深层含水量
+            double[,] W = new double[1, N];//土壤含水量
+            double[,] Eu = new double[1, N];//上层土壤蒸发量
+            double[,] El = new double[1, N];//下层土壤蒸发量
+            double[,] Ed = new double[1, N];//深层土壤蒸发量
+            double[,] E = new double[1, N];//总土壤蒸发量
+            double[,] PE = new double[1, N];//净雨量
+            double[,] a = new double[1, N];
+            double[,] R = new double[1, N];
+            double[,] RIM = new double[1, N];//不透水部分产生的地面径流
+            double[,] Ep = new double[1, N];
+            double WM;
+            double WMM;
+            double[] UH = new double[] { 0, 460.5, 140.5, 67.8, 35.2, 18.9, 10.3, 5.7, 3.2, 1.8, 1, 0.6, 0.3, 0.2, 0.1, 0.1, 0 };
+            for (int i = 0; i < N - 1; i++)
+            {
+                Ep[0, i] = KC * Ew[0, i];//here is a matrix,und Ew is from excel//流域蒸发能力
+            }
+
+            WM = WUM + WLM + WDM;//流域平均蓄水量
+            WMM = WM * (b + 1) * (1 - IMP);
+            WU[0, 0] = WUM * FE;
+            WL[0, 0] = WLM * FE;
+            WD[0, 0] = WDM * FE;
+            W[0, 0] = WU[0, 0] + WL[0, 0] + WD[0, 0];
+            //三层蒸发与产流模型
+            for (int i = 0; i < N - 1; i++)
+            {
+                if (WU[0, i] + P[0, i] > Ep[0, i])
+                {
+                    Eu[0, i] = Ep[0, i];
+                    El[0, i] = 0;
+                    Ed[0, i] = 0;
+                    E[0, i] = Eu[0, i] + El[0, i] + Ed[0, i];
+                }
+                else if ((WU[0, i] + P[0, i] < Ep[0, i]) && (WL[0, i] >= C * WLM))//Ep某有定义
+                {
+                    Eu[0, i] = WU[0, i] + P[0, i];
+                    El[0, i] = (Ep[0, i] - Eu[0, i]) * C;
+                    Ed[0, i] = 0;
+                    E[0, i] = Eu[0, i] + El[0, i] + Ed[0, i];
+                }
+                else
+                {
+                    Eu[0, i] = WU[0, i] + P[0, i];
+                    El[0, i] = WL[0, i];
+                    Ed[0, i] = (Ep[0, i] - Eu[0, i]) * C - El[0, i];
+                    E[0, i] = Eu[0, i] + El[0, i] + Ed[0, i];
+                }
+                PE[0, i] = P[0, i] - E[0, i];
+                W[0, i] = WU[0, i] + WL[0, i] + WD[0, i];
+                //产流
+                if (PE[0, i] > 0)
+                {
+                    a[0, i] = WMM * (1 - Math.Pow((1 - (W[0, i] / WM)), (1 / (b + 1))));
+                    if (a[0, i] + PE[0, i] < WMM || a[0, i] + PE[0, i] == WMM)
+                    {
+                        R[0, i] = PE[0, i] + W[0, i] - WM + WM * Math.Pow((1 - ((PE[0, i] + a[0, i]) / WMM)), (b + 1));
+                    }
+                    else
+                    {
+                        R[0, i] = PE[0, i] - WM + W[0, i];
+                    }
+                }
+                else
+                {
+                    R[0, i] = 0;
+                }
+                RIM[0, i] = P[0, i] * IMP;
+                //土壤湿度
+                if (P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] < WUM)//降水少，以至于上层土壤湿度达不到饱和
+                {
+                    WU[0, i + 1] = P[0, i] - Eu[0, i] - R[0, i] + WU[0, i];
+                    WL[0, i + 1] = WL[0, i] - El[0, i];
+                    WD[0, i + 1] = WD[0, i] - Ed[0, i];
+                }
+                else
+                {
+                    WU[0, i + 1] = WUM;//降雨充分，上层土壤饱和，水分继续下渗
+                    if (P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i] < WLM)//降雨使上层土壤饱和，但是下层土壤不饱和
+                    {
+                        WL[0, i + 1] = P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i];
+                        WD[0, i + 1] = WD[0, i] - Ed[0, i];
+                    }
+                    else
+                    {
+                        WL[0, i + 1] = WLM;
+                        if (P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i] - WLM + WD[0, i] - Ed[0, i] < WDM)
+                        {
+                            WD[0, i + 1] = P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i] - WLM + WD[0, i] - Ed[0, i];
+                        }
+                        else
+                        {
+                            WD[0, i + 1] = WDM;
+                        }
+
+                    }
+
+                }
+                if (WU[0, i + 1] < 0)
+                {
+                    WU[0, i + 1] = 0;
+                }
+                if (WL[0, i + 1] < 0)
+                {
+                    WL[0, i + 1] = 0;
+                }
+                if (WD[0, i + 1] < 0)
+                {
+                    WD[0, i + 1] = 0;
+                }
+            }
+
+            double[,] AU = new double[1, N];
+            double[,] RS = new double[1, N];//地面径流
+            double[,] RSS = new double[1, N];//壤中流
+            double[,] RG = new double[1, N];//地下水
+            double[,] S = new double[1, N];//土壤自由含水量
+            double EX = EX4;// 0.46;//自由水蓄水洪量-面积分布曲线方程指数
+            double SM = SM4;// 36;//自由水蓄水容量
+            double KSS = KSS4;// 0.06;//自由水对壤中流日出流系数
+            double KG = KG4;//0.05;//自由水对地下水出流系数
+            S[0, 0] = SM * FE;//土壤含水量初值
+            double SMM;
+            double[,] FR = new double[1, N];
+            for (int i = 0; i < N - 1; i++)
+            {
+                if (PE[0, i] > 0)
+                {
+                    FR[0, i] = R[0, i] / PE[0, i];
+                    SMM = SM * (1 + EX);//%流域最大自由水蓄量 
+                    AU[0, i] = SMM * (1 - Math.Pow((1 - (S[0, i] / SMM)), (1 / (EX + 1))));
+                    if (PE[0, i] + AU[0, i] < SMM)
+                    {
+                        RS[0, i] = (PE[0, i] - SM + S[0, i] + SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * FR[0, i];
+                        RSS[0, i] = (SM - SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * KSS * FR[0, i];
+                        RG[0, i] = (SM - SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * KG * FR[0, i];
+                        S[0, i + 1] = (SM - SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * (1 - KSS - KG);
+                    }
+                    else
+                    {
+                        RS[0, i] = (PE[0, i] - SM + S[0, i]) * FR[0, i];
+                        RSS[0, i] = SM * KSS * FR[0, i];
+                        RG[0, i] = SM * KG * FR[0, i];
+                        S[0, i + 1] = SM * (1 - KSS - KG);
+                    }
+                }
+                else
+                {
+                    FR[0, i] = 1 - Math.Pow((1 - W[0, i] / WM), (b / (1 + b)));
+                    RS[0, i] = 0;
+                    RSS[0, i] = S[0, i] * KSS * FR[0, i];
+                    RG[0, i] = S[0, i] * KG * FR[0, i];
+                    S[0, i + 1] = S[0, i] * (1 - KSS - KG);
+                }
+
+                RS[0, i] = RS[0, i] + RIM[0, i];//%总的地表径流 
+            }
+            //汇流计算
+            double[,] QSS = new double[1, N];
+            double[,] QG = new double[1, N];
+            int T = 24;//单位线时段长度
+            double U = AREA / 3.6 / T;//折算系数
+            double KKSS = KKSS4;// 0.83;//壤中流消退系数
+            double KKG = KKG4;// 0.995;//地下水消退系数
+            QSS[0, 0] = RSS[0, 0] * (1 - KKSS) * U;
+            QG[0, 0] = RG[0, 0] * (1 - KKG) * U;
+            double[,] Q = new double[1, N];
+            double[,] Qm = new double[1, N];
+
+            for (int i = 0; i < 17; i++)
+            {
+                for (int j = 0; j < i + 1; j++)
+                {
+                    Q[0, i] = Q[0, i] + RS[0, i - j] * UH[j] / 10;
+                }
+            }
+            for (int i = 17; i < N; i++)
+            {
+                for (int j = 0; j < 17; j++)
+                {
+                    Q[0, i] = Q[0, i] + RS[0, i - j] * UH[j] / 10;
+                }
+            }
+            for (int i = 1; i < N; i++)
+            {
+
+                QSS[0, i] = QSS[0, i - 1] * KKSS + RSS[0, i] * (1 - KKSS) * U;//%计算壤中流产生的出流  
+                QG[0, i] = QG[0, i - 1] * KKG + RG[0, i] * (1 - KKG) * U;//%计算地下水流产生的出流 
+
+                Qm[0, i] = Q[0, i] + QSS[0, i] + QG[0, i];
+
+            }
+            double xc = 0;
+            double yc = 0;
+            double c = 0;
+            for (int i = 0; i < Q1.Length; i++)
+            { c = c + Q1[0, i]; }
+            double aver = c / Q1.Length;
+
+            for (int i = 0; i < Qm.Length; i++)
+            {
+                xc = xc + Math.Pow((Qm[0, i] - Q1[0, i]), 2);
+                yc = yc + Math.Pow((Q1[0, i] - aver), 2);
+
+            }
+            double DC = 1 - xc / yc;
+            return (Qm);
+
+            // Console.WriteLine(DC );
+            //Console.ReadKey();
+        }
+    }
+    class XAJ1
+    {
+
+        public double XAJ(double WUM4, double WLM4, double WDM4, double KC4, double C4, double b4, double EX4, double SM4, double KSS4, double KG4, double KKSS4, double KKG4, double[,] Ew, double[,] Q1, double[,] P)
+        {
+            int N = Ew.Length;
+            double FE = 0.8;// 土壤初始含水量折算系数
+            //double WUM = 63;
+            double WUM = WUM4; //上层土壤含水容量
+            double WLM = WLM4;//= 13;//下层土壤含水容量
+            double WDM = WDM4;//= 50;//深层土壤含水容量
+            double KC = KC4;//0.71;//流域蒸发折算系数
+            double C = C4;//0.17;//蒸发扩散系数
+            double b = b4;//3.0;//蓄水容量曲线的次方
+            double IMP = 0.001;//流域不透水面积占全流域的百分比
+            double AREA = 6448;//流域面积
+            double[,] WU = new double[1, N];//上层含水量
+            double[,] WL = new double[1, N];//下层含水量
+            double[,] WD = new double[1, N];//深层含水量
+            double[,] W = new double[1, N];//土壤含水量
+            double[,] Eu = new double[1, N];//上层土壤蒸发量
+            double[,] El = new double[1, N];//下层土壤蒸发量
+            double[,] Ed = new double[1, N];//深层土壤蒸发量
+            double[,] E = new double[1, N];//总土壤蒸发量
+            double[,] PE = new double[1, N];//净雨量
+            double[,] a = new double[1, N];
+            double[,] R = new double[1, N];
+            double[,] RIM = new double[1, N];//不透水部分产生的地面径流
+            double[,] Ep = new double[1, N];
+            double WM;
+            double WMM;
+            double[] UH = new double[] { 0, 460.5, 140.5, 67.8, 35.2, 18.9, 10.3, 5.7, 3.2, 1.8, 1, 0.6, 0.3, 0.2, 0.1, 0.1, 0 };
+            for (int i = 0; i < N - 1; i++)
+            {
+                Ep[0, i] = KC * Ew[0, i];//here is a matrix,und Ew is from excel//流域蒸发能力
+            }
+
+            WM = WUM + WLM + WDM;//流域平均蓄水量
+            WMM = WM * (b + 1) * (1 - IMP);
+            WU[0, 0] = WUM * FE;
+            WL[0, 0] = WLM * FE;
+            WD[0, 0] = WDM * FE;
+            W[0, 0] = WU[0, 0] + WL[0, 0] + WD[0, 0];
+            //三层蒸发与产流模型
+            for (int i = 0; i < N - 1; i++)
+            {
+                if (WU[0, i] + P[0, i] > Ep[0, i])
+                {
+                    Eu[0, i] = Ep[0, i];
+                    El[0, i] = 0;
+                    Ed[0, i] = 0;
+                    E[0, i] = Eu[0, i] + El[0, i] + Ed[0, i];
+                }
+                else if ((WU[0, i] + P[0, i] < Ep[0, i]) && (WL[0, i] >= C * WLM))//Ep某有定义
+                {
+                    Eu[0, i] = WU[0, i] + P[0, i];
+                    El[0, i] = (Ep[0, i] - Eu[0, i]) * C;
+                    Ed[0, i] = 0;
+                    E[0, i] = Eu[0, i] + El[0, i] + Ed[0, i];
+                }
+                else
+                {
+                    Eu[0, i] = WU[0, i] + P[0, i];
+                    El[0, i] = WL[0, i];
+                    Ed[0, i] = (Ep[0, i] - Eu[0, i]) * C - El[0, i];
+                    E[0, i] = Eu[0, i] + El[0, i] + Ed[0, i];
+                }
+                PE[0, i] = P[0, i] - E[0, i];
+                W[0, i] = WU[0, i] + WL[0, i] + WD[0, i];
+                //产流
+                if (PE[0, i] > 0)
+                {
+                    a[0, i] = WMM * (1 - Math.Pow((1 - (W[0, i] / WM)), (1 / (b + 1))));
+                    if (a[0, i] + PE[0, i] < WMM || a[0, i] + PE[0, i] == WMM)
+                    {
+                        R[0, i] = PE[0, i] + W[0, i] - WM + WM * Math.Pow((1 - ((PE[0, i] + a[0, i]) / WMM)), (b + 1));
+                    }
+                    else
+                    {
+                        R[0, i] = PE[0, i] - WM + W[0, i];
+                    }
+                }
+                else
+                {
+                    R[0, i] = 0;
+                }
+                RIM[0, i] = P[0, i] * IMP;
+                //土壤湿度
+                if (P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] < WUM)//降水少，以至于上层土壤湿度达不到饱和
+                {
+                    WU[0, i + 1] = P[0, i] - Eu[0, i] - R[0, i] + WU[0, i];
+                    WL[0, i + 1] = WL[0, i] - El[0, i];
+                    WD[0, i + 1] = WD[0, i] - Ed[0, i];
+                }
+                else
+                {
+                    WU[0, i + 1] = WUM;//降雨充分，上层土壤饱和，水分继续下渗
+                    if (P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i] < WLM)//降雨使上层土壤饱和，但是下层土壤不饱和
+                    {
+                        WL[0, i + 1] = P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i];
+                        WD[0, i + 1] = WD[0, i] - Ed[0, i];
+                    }
+                    else
+                    {
+                        WL[0, i + 1] = WLM;
+                        if (P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i] - WLM + WD[0, i] - Ed[0, i] < WDM)
+                        {
+                            WD[0, i + 1] = P[0, i] - Eu[0, i] - R[0, i] + WU[0, i] - WUM + WL[0, i] - El[0, i] - WLM + WD[0, i] - Ed[0, i];
+                        }
+                        else
+                        {
+                            WD[0, i + 1] = WDM;
+                        }
+
+                    }
+
+                }
+                if (WU[0, i + 1] < 0)
+                {
+                    WU[0, i + 1] = 0;
+                }
+                if (WL[0, i + 1] < 0)
+                {
+                    WL[0, i + 1] = 0;
+                }
+                if (WD[0, i + 1] < 0)
+                {
+                    WD[0, i + 1] = 0;
+                }
+            }
+
+            double[,] AU = new double[1, N];
+            double[,] RS = new double[1, N];//地面径流
+            double[,] RSS = new double[1, N];//壤中流
+            double[,] RG = new double[1, N];//地下水
+            double[,] S = new double[1, N];//土壤自由含水量
+            double EX = EX4;// 0.46;//自由水蓄水洪量-面积分布曲线方程指数
+            double SM = SM4;// 36;//自由水蓄水容量
+            double KSS = KSS4;// 0.06;//自由水对壤中流日出流系数
+            double KG = KG4;//0.05;//自由水对地下水出流系数
+            S[0, 0] = SM * FE;//土壤含水量初值
+            double SMM;
+            double[,] FR = new double[1, N];
+            for (int i = 0; i < N - 1; i++)
+            {
+                if (PE[0, i] > 0)
+                {
+                    FR[0, i] = R[0, i] / PE[0, i];
+                    SMM = SM * (1 + EX);//%流域最大自由水蓄量 
+                    AU[0, i] = SMM * (1 - Math.Pow((1 - (S[0, i] / SMM)), (1 / (EX + 1))));
+                    if (PE[0, i] + AU[0, i] < SMM)
+                    {
+                        RS[0, i] = (PE[0, i] - SM + S[0, i] + SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * FR[0, i];
+                        RSS[0, i] = (SM - SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * KSS * FR[0, i];
+                        RG[0, i] = (SM - SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * KG * FR[0, i];
+                        S[0, i + 1] = (SM - SM * Math.Pow((1 - (PE[0, i] + AU[0, i]) / SMM), ((1 + EX)))) * (1 - KSS - KG);
+                    }
+                    else
+                    {
+                        RS[0, i] = (PE[0, i] - SM + S[0, i]) * FR[0, i];
+                        RSS[0, i] = SM * KSS * FR[0, i];
+                        RG[0, i] = SM * KG * FR[0, i];
+                        S[0, i + 1] = SM * (1 - KSS - KG);
+                    }
+                }
+                else
+                {
+                    FR[0, i] = 1 - Math.Pow((1 - W[0, i] / WM), (b / (1 + b)));
+                    RS[0, i] = 0;
+                    RSS[0, i] = S[0, i] * KSS * FR[0, i];
+                    RG[0, i] = S[0, i] * KG * FR[0, i];
+                    S[0, i + 1] = S[0, i] * (1 - KSS - KG);
+                }
+
+                RS[0, i] = RS[0, i] + RIM[0, i];//%总的地表径流 
+            }
+            //汇流计算
+            double[,] QSS = new double[1, N];
+            double[,] QG = new double[1, N];
+            int T = 24;//单位线时段长度
+            double U = AREA / 3.6 / T;//折算系数
+            double KKSS = KKSS4;// 0.83;//壤中流消退系数
+            double KKG = KKG4;// 0.995;//地下水消退系数
+            QSS[0, 0] = RSS[0, 0] * (1 - KKSS) * U;
+            QG[0, 0] = RG[0, 0] * (1 - KKG) * U;
+            double[,] Q = new double[1, N];
+            double[,] Qm = new double[1, N];
+
+            for (int i = 0; i < 17; i++)
+            {
+                for (int j = 0; j < i + 1; j++)
+                {
+                    Q[0, i] = Q[0, i] + RS[0, i - j] * UH[j] / 10;
+                }
+            }
+            for (int i = 17; i < N; i++)
+            {
+                for (int j = 0; j < 17; j++)
+                {
+                    Q[0, i] = Q[0, i] + RS[0, i - j] * UH[j] / 10;
+                }
+            }
+            for (int i = 1; i < N; i++)
+            {
+
+                QSS[0, i] = QSS[0, i - 1] * KKSS + RSS[0, i] * (1 - KKSS) * U;//%计算壤中流产生的出流  
+                QG[0, i] = QG[0, i - 1] * KKG + RG[0, i] * (1 - KKG) * U;//%计算地下水流产生的出流 
+
+                Qm[0, i] = Q[0, i] + QSS[0, i] + QG[0, i];
+
+            }
+            double xc = 0;
+            double yc = 0;
+            double c = 0;
+            for (int i = 0; i < Q1.Length; i++)
+            { c = c + Q1[0, i]; }
+            double aver = c / Q1.Length;
+
+            for (int i = 0; i < Qm.Length; i++)
+            {
+                xc = xc + Math.Pow((Qm[0, i] - Q1[0, i]), 2);
+                yc = yc + Math.Pow((Q1[0, i] - aver), 2);
+
+            }
+            double DC = 1 - xc / yc;
+            return (DC);
+
+            // Console.WriteLine(DC );
+            //Console.ReadKey();
+        }
+    }
+    }
+
